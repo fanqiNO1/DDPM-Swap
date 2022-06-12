@@ -11,7 +11,7 @@ from Unet_part import SiLU, TimeEmbedding, ResidualBlock, DownBlock, UpBlock, Mi
 
 
 class Unet(nn.Module):
-    def __init__(self, image_channels=3, n_channels=16, n_groups=8, ch_mults=(1, 2, 2, 4), is_attn=(False, False, True, True), n_blocks=2):
+    def __init__(self, image_channels=3, n_channels=16, n_groups=8, ch_mults=(1, 2, 2, 4), is_attn=(False, False, False, True), n_blocks=2):
         super(Unet, self).__init__()
         n_resolutions = len(ch_mults)
         self.image_proj = nn.Conv2d(

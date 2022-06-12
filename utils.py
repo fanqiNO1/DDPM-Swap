@@ -23,9 +23,10 @@ def sample(ddpm, ae, arcface, source_image, target_image, args):
             t = args.n_steps - i - 1
             x = ddpm.p_sample(x, x.new_full((args.n_samples,), t, dtype=torch.long))
             if i > args.range_t:
+                t = torch.tensor([t]).to(args.device)
                 source_image = ddpm.q_sample(source_image, t, eps=torch.randn(source_image.shape).to(args.device))
                 target_image = F.interpolate(target_image, size=(112, 112), mode="bicubic")
-                target_latent = arcface(target_latent)
+                target_latent = arcface(target_image)
                 x = x - ae(x, None) + ae(source_image, target_latent)
     x = x.cpu().numpy()
     return x[0]
@@ -42,15 +43,17 @@ def plot(ddpm, ae, arcface, source_images, target_images, epoch, args):
                 target_image = target_images[j - 1, :, :, :].cpu().numpy()
                 target_image = target_image * std + mean
                 target_image = target_image.transpose(1, 2, 0)
-                result[j * w:(j + 1) * w, :, :] = target_image
+                result[j * w:(j + 1) * w, 0:h, :] = target_image
             elif i != 0 and j == 0:
                 source_image = source_images[i - 1, :, :, :].cpu().numpy()
                 source_image = source_image * std + mean
                 source_image = source_image.transpose(1, 2, 0)
-                result[:, i * h:(i + 1) * h, :] = source_image
+                result[0:w, i * h:(i + 1) * h, :] = source_image
             elif i != 0 and j != 0:
                 source_image = source_images[i-1, :, :, :]
                 target_image = target_images[j-1, :, :, :]
+                source_image = source_image.reshape(1, n, w, h)
+                target_image = target_image.reshape(1, n, w, h)
                 sample_image = sample(ddpm, ae, arcface, source_image, target_image, args)
                 sample_image = sample_image * std + mean
                 sample_image = sample_image.transpose(1, 2, 0)
